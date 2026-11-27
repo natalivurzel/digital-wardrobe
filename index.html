@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Wardrobe">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>Wardrobe — personal styling</title>
+  <style>
+    :root{--paper:#f4f1eb;--card:#fbfaf7;--ink:#282824;--muted:#88877f;--line:#e5e1d8;--accent:#777b68;--soft:#e9e7df;--shadow:0 10px 30px #3431260d}
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input,select{font:inherit} button{cursor:pointer}
+    .app{max-width:760px;margin:auto;min-height:100dvh;padding:env(safe-area-inset-top) 16px calc(88px + env(safe-area-inset-bottom))}
+    header{display:flex;align-items:center;justify-content:space-between;padding:23px 2px 17px}
+    .brand{font-family:Georgia,serif;font-size:25px;letter-spacing:.02em}.brand small{display:block;font:10px Inter,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+    .top-actions{display:flex;gap:8px}.icon-btn,.pill-btn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:10px 13px;color:var(--ink);font-size:12px}
+    .tabs{display:flex;gap:7px;overflow:auto;padding:0 0 16px;scrollbar-width:none}.tabs button{white-space:nowrap;border:0;background:transparent;color:var(--muted);padding:9px 13px;border-radius:30px;font-size:12px}.tabs button.active{background:var(--ink);color:white}
+    .view{display:none}.view.active{display:block}
+    .eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:5px 0 8px}
+    h1{font:29px Georgia,serif;font-weight:400;margin:0 0 5px} .sub{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 19px}
+    .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:15px 0}
+    .filters{display:flex;gap:6px;overflow:auto;scrollbar-width:none}.filter{border:1px solid var(--line);background:transparent;padding:8px 11px;border-radius:30px;color:var(--muted);font-size:11px;white-space:nowrap}.filter.active{background:var(--soft);color:var(--ink);border-color:var(--soft)}
+    .primary{background:var(--ink);color:white;border:0;border-radius:30px;padding:12px 16px;font-size:12px}.secondary{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:30px;padding:11px 14px;font-size:12px}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.item-card{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;position:relative;min-width:0}
+    .item-photo{aspect-ratio:4/5;background:#eeece6;display:flex;align-items:center;justify-content:center;overflow:hidden}.item-photo img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+    .item-info{padding:9px 9px 11px}.item-name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-cat{font-size:9px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.1em}
+    .tiny-x{position:absolute;right:6px;top:6px;border:0;background:#fbfaf7e8;border-radius:50%;width:25px;height:25px}
+    .empty{border:1px dashed #d2cec3;border-radius:16px;padding:30px 18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6;grid-column:1/-1}
+    .studio-layout{display:grid;grid-template-columns:1fr;gap:14px}
+    .canvas-wrap{background:#e9e6de;border:1px solid var(--line);border-radius:18px;padding:12px}
+    .canvas-head{display:flex;justify-content:space-between;align-items:center;padding:2px 2px 10px;font-size:11px;color:var(--muted)}
+    #outfitCanvas{position:relative;height:min(58vh,540px);min-height:390px;background:#f8f6f1;border-radius:12px;overflow:hidden;touch-action:none}
+    #outfitCanvas:before{content:"";position:absolute;inset:12px;border:1px solid #eeebe3;border-radius:7px;pointer-events:none}
+    .canvas-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:35px;color:#aaa69b;font:italic 17px Georgia;pointer-events:none}
+    .placed{position:absolute;max-width:85%;max-height:85%;width:55%;height:58%;object-fit:contain;mix-blend-mode:multiply;touch-action:none;user-select:none;filter:drop-shadow(0 3px 2px #00000008)}
+    .placed.selected{outline:1px dashed #929581;outline-offset:3px}
+    .canvas-controls{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+    .category-row{display:flex;gap:7px;overflow:auto;padding:2px 0 8px;scrollbar-width:none}
+    .pick{width:82px;flex:0 0 82px;background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:hidden;padding:0;text-align:left}
+    .pick img{width:100%;height:84px;object-fit:contain;background:#eeece6;mix-blend-mode:multiply}.pick span{display:block;padding:6px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .saved-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.look-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px}.look-preview{height:190px;background:#f0eee8;border-radius:9px;position:relative;overflow:hidden}.look-preview img{position:absolute;object-fit:contain;mix-blend-mode:multiply}.look-title{font:16px Georgia;margin:10px 2px 4px}.look-actions{display:flex;gap:6px}.look-actions button{font-size:10px;padding:7px 9px}
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;padding:9px 14px calc(9px + env(safe-area-inset-bottom));background:#f4f1ebed;backdrop-filter:blur(15px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:10}
+    .bottom-inner{width:min(100%,720px);display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.nav-btn{border:0;background:transparent;color:var(--muted);font-size:10px;padding:8px 4px;border-radius:10px}.nav-btn span{display:block;font-size:17px;margin-bottom:3px}.nav-btn.active{background:#e9e7df;color:var(--ink)}
+    dialog{border:0;border-radius:18px;padding:22px;width:min(92vw,420px);background:var(--card);color:var(--ink);box-shadow:0 20px 70px #0003}dialog::backdrop{background:#2228}.modal-title{font:23px Georgia;margin:0 0 15px}.field{display:block;margin:12px 0}.field span{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}.field input,.field select{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;background:white;color:var(--ink)}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+    .notice{font-size:11px;color:var(--muted);line-height:1.5;margin:12px 0}.toast{position:fixed;bottom:95px;left:50%;transform:translateX(-50%);background:var(--ink);color:white;padding:10px 15px;border-radius:30px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:20}.toast.show{opacity:1}
+    @media(min-width:620px){.app{padding-left:26px;padding-right:26px}.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.studio-layout{grid-template-columns:minmax(0,1fr)}#outfitCanvas{height:520px}.saved-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">wardrobe<small>personal styling studio</small></div>
+    <div class="top-actions">
+      <button class="icon-btn" id="exportBtn" aria-label="Экспорт">↥</button>
+      <button class="icon-btn" id="importBtn" aria-label="Импорт">↧</button>
+      <input id="importFile" type="file" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <main>
+    <section class="view active" id="wardrobeView">
+      <div class="eyebrow">Your collection</div><h1>Мой гардероб</h1>
+      <p class="sub">Все любимые вещи — в одном месте.</p>
+      <div class="toolbar"><div class="filters" id="wardrobeFilters"></div><button class="primary" id="addBtn">＋ Добавить</button></div>
+      <div class="grid" id="wardrobeGrid"></div>
+    </section>
+
+    <section class="view" id="studioView">
+      <div class="eyebrow">Create your look</div><h1>Собери образ</h1>
+      <p class="sub">Выбирай вещи ниже — они появятся на полотне. Перетаскивай их, меняй размер и порядок.</p>
+      <div class="studio-layout">
+        <div class="canvas-wrap">
+          <div class="canvas-head"><span>OUTFIT CANVAS</span><span id="selectedLabel">Выбери вещь ниже ↓</span></div>
+          <div id="outfitCanvas"><div class="canvas-hint" id="canvasHint">Твой следующий<br>любимый образ</div></div>
+          <div class="canvas-controls">
+            <button class="secondary" id="smallerBtn">− Размер</button><button class="secondary" id="largerBtn">＋ Размер</button>
+            <button class="secondary" id="frontBtn">На передний план</button><button class="secondary" id="removeBtn">Убрать</button>
+            <button class="secondary" id="clearBtn">Очистить</button>
+          </div>
+        </div>
+        <div>
+          <div class="toolbar"><div class="eyebrow" style="margin:0">Choose a category</div><button class="secondary" id="saveLookBtn">♡ Сохранить образ</button></div>
+          <div class="filters" id="studioFilters" style="margin-bottom:10px;flex-wrap:wrap"></div>
+          <div class="category-row" id="studioItems"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="looksView">
+      <div class="eyebrow">Your edits</div><h1>Мои образы</h1>
+      <p class="sub">Сохраняй сочетания, к которым захочется возвращаться.</p>
+      <div class="saved-grid" id="looksGrid"></div>
+    </section>
+  </main>
+</div>
+
+<nav class="bottom-nav"><div class="bottom-inner">
+  <button class="nav-btn active" data-view="wardrobe"><span>▦</span>Гардероб</button>
+  <button class="nav-btn" data-view="studio"><span>✳</span>Собрать образ</button>
+  <button class="nav-btn" data-view="looks"><span>♡</span>Мои образы</button>
+</div></nav>
+<div class="toast" id="toast"></div>
+
+<dialog id="addDialog">
+  <form id="addForm">
+    <h2 class="modal-title">Новая вещь</h2>
+    <label class="field"><span>Фотография</span><input id="photoInput" type="file" accept="image/*" required></label>
+    <label class="field"><span>Название</span><input id="nameInput" type="text" placeholder="Например, белая рубашка" required></label>
+    <label class="field"><span>Категория</span><select id="categoryInput"></select></label>
+    <p class="notice">Лучше всего подходят фотографии вещи на спокойном фоне. Фон можно удалить заранее — приложение покажет изображение как коллажный элемент.</p>
+    <div class="modal-actions"><button type="button" class="secondary" id="cancelAdd">Отмена</button><button class="primary" type="submit">Добавить в гардероб</button></div>
+  </form>
+</dialog>
+
+<dialog id="saveDialog">
+  <form id="saveForm"><h2 class="modal-title">Сохранить образ</h2>
+    <label class="field"><span>Название образа</span><input id="lookName" placeholder="Например, Sunday mood" required></label>
+    <div class="modal-actions"><button type="button" class="secondary" id="cancelSave">Отмена</button><button class="primary" type="submit">Сохранить</button></div>
+  </form>
+</dialog>
+<script src="app.js"></script>
+</body></html>
